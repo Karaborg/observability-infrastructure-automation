@@ -1,0 +1,35 @@
+---
+alloy_package_name: "alloy"
+
+# The account must exist and be able to read application_log_path.
+# Override this with a dedicated, non-root service account in production.
+monitoring_base_dir: "/opt/observability"
+
+monitoring_owner: "{{ ansible_user }}"
+
+alloy_config_dir: "{{ monitoring_base_dir }}/alloy"
+alloy_config_file: "{{ alloy_config_dir }}/config.alloy"
+
+alloy_version: "1.20.1"
+alloy_download_url: "https://github.com/grafana/alloy/releases/download/v{{ alloy_version }}/alloy-linux-amd64.zip"
+
+alloy_binary: "{{ alloy_config_dir }}/alloy"
+
+alloy_service_file: "/etc/systemd/system/alloy.service"
+alloy_service_name: "alloy"
+
+# Configure this per environment. Do not commit credentials in this URL.
+loki_url: "https://loki.example.com/loki/api/v1/push"
+
+application_name: "example-app"
+application_log_path: "/var/log/example-app"
+alloy_environment: "development"
+
+# Protect the host and Loki from oversized log entries.
+alloy_max_log_line_size: "256KiB"
+alloy_truncate_suffix: " [TRUNCATED BY ALLOY]"
+
+# Systemd resource limits. MemoryLimit is used for compatibility with older systemd.
+alloy_memory_limit: "256M"
+alloy_cpu_quota: "20%"
+alloy_tasks_max: 128

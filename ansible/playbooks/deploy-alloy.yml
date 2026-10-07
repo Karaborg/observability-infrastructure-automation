@@ -1,0 +1,7 @@
+---
+- name: Deploy Grafana Alloy
+  hosts: all
+  gather_facts: true
+
+  roles:
+    - alloy

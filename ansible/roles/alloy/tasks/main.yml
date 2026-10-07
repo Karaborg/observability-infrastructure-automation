@@ -1,0 +1,90 @@
+---
+- name: Create monitoring base directory
+  ansible.builtin.file:
+    path: "{{ monitoring_base_dir }}"
+    state: directory
+    owner: "{{ monitoring_owner }}"
+    mode: "0755"
+
+- name: Display target system information
+  ansible.builtin.debug:
+    msg:
+      - "Hostname: {{ ansible_hostname }}"
+      - "OS: {{ ansible_distribution }}"
+      - "Version: {{ ansible_distribution_version }}"
+      - "Architecture: {{ ansible_architecture }}"
+      - "Monitoring directory: {{ monitoring_base_dir }}"
+      - "Monitoring owner: {{ monitoring_owner }}"
+
+- name: Check glibc version
+  ansible.builtin.command:
+    cmd: ldd --version
+  register: glibc_version
+  changed_when: false
+
+- name: Display glibc version
+  ansible.builtin.debug:
+    msg: "{{ glibc_version.stdout_lines[0] }}"
+
+- name: Create Alloy directory
+  ansible.builtin.file:
+    path: "{{ alloy_config_dir }}"
+    state: directory
+    owner: "{{ monitoring_owner }}"
+    mode: "0755"
+
+- name: Download Alloy archive
+  ansible.builtin.get_url:
+    url: "{{ alloy_download_url }}"
+    dest: "/tmp/alloy-{{ alloy_version }}.zip"
+    mode: "0644"
+
+- name: Extract Alloy archive
+  ansible.builtin.unarchive:
+    src: "/tmp/alloy-{{ alloy_version }}.zip"
+    dest: "{{ alloy_config_dir }}"
+    remote_src: true
+    creates: "{{ alloy_binary }}"
+
+- name: Rename Alloy binary
+  ansible.builtin.command:
+    cmd: >
+      mv {{ alloy_config_dir }}/alloy-linux-amd64
+      {{ alloy_binary }}
+  args:
+    creates: "{{ alloy_binary }}"
+
+- name: Ensure Alloy binary is executable
+  ansible.builtin.file:
+    path: "{{ alloy_binary }}"
+    owner: "{{ monitoring_owner }}"
+    mode: "0755"
+
+- name: Install Alloy systemd service
+  become: true
+  ansible.builtin.template:
+    src: alloy.service.j2
+    dest: "{{ alloy_service_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart Alloy
+
+- name: Deploy Alloy configuration
+  ansible.builtin.template:
+    src: config.alloy.j2
+    dest: "{{ alloy_config_file }}"
+    owner: "{{ monitoring_owner }}"
+    mode: "0644"
+  notify:
+    - Restart Alloy
+
+- name: Enable and start Alloy service
+  become: true
+  ansible.builtin.systemd:
+    name: "{{ alloy_service_name }}"
+    enabled: true
+    state: started
+    daemon_reload: true

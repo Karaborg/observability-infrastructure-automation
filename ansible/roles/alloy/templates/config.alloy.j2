@@ -1,0 +1,43 @@
+local.file_match "application_logs" {
+  path_targets = [{
+    "__path__"    = "{{ application_log_path }}/*.{log,out}",
+    "job"         = "{{ application_name }}",
+    "environment" = "{{ alloy_environment }}",
+    "hostname"    = "{{ ansible_hostname }}",
+  }]
+}
+
+loki.source.file "application_logs" {
+  targets       = local.file_match.application_logs.targets
+  forward_to    = [loki.process.application_logs.receiver]
+  tail_from_end = true
+}
+
+loki.process "application_logs" {
+  stage.truncate {
+    rule {
+      limit       = "{{ alloy_max_log_line_size }}"
+      source_type = "line"
+      suffix      = "{{ alloy_truncate_suffix }}"
+    }
+  }
+
+  stage.regex {
+    source     = "filename"
+    expression = ".*/(?P<logfile>[^/]+)$"
+  }
+
+  stage.labels {
+    values = {
+      logfile = "",
+    }
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "{{ loki_url }}"
+  }
+}

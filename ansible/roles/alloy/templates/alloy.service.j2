@@ -1,0 +1,25 @@
+[Unit]
+Description=Grafana Alloy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ monitoring_owner }}
+
+WorkingDirectory={{ alloy_config_dir }}
+
+ExecStart={{ alloy_binary }} run {{ alloy_config_file }}
+
+Restart=on-failure
+RestartSec=5
+
+# Resource protection
+MemoryLimit={{ alloy_memory_limit }}
+CPUQuota={{ alloy_cpu_quota }}
+
+# Do not allow Alloy to create an excessive number of processes
+TasksMax={{ alloy_tasks_max }}
+
+[Install]
+WantedBy=multi-user.target
