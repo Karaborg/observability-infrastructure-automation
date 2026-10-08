@@ -1,5 +1,5 @@
 # Terraform status
 
-This directory is reserved for central Grafana configuration. No Terraform resources are implemented yet.
+`terraform/grafana` manages Grafana resources only. It does not install Grafana, Loki, Prometheus, Tempo, or an OTLP collector.
 
-Planned scope includes Grafana folders, dashboards, datasources, alert rules, and notification configuration where suitable. Keep provider credentials and environment values out of version control; Terraform state and `.tfvars` files are ignored by this repository.
+Use secret variables and a state backend appropriate to your environment. Terraform state and `.tfvars` files must not be committed.

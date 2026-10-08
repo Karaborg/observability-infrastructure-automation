@@ -1,0 +1,50 @@
+{
+  "id": 1,
+  "uid": "dfopy52rvaneoc",
+  "orgID": 1,
+  "folderUID": "bfopy1hy6tc00d",
+  "ruleGroup": "Default",
+  "title": "Down Services",
+  "condition": "A",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "",
+      "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+      },
+      "datasourceUid": "dfoiotr4n13pce",
+      "model": {
+        "editorMode": "code",
+        "expr": "probe_http_status_code != 200",
+        "instant": true,
+        "intervalMs": 1000,
+        "legendFormat": "__auto",
+        "maxDataPoints": 43200,
+        "range": false,
+        "refId": "A"
+      }
+    }
+  ],
+  "updated": "2026-10-07T09:45:04+03:00",
+  "noDataState": "OK",
+  "execErrState": "Error",
+  "for": "1m",
+  "keep_firing_for": "0s",
+  "annotations": {
+    "__dashboardUid__": "xtkCtBkiz",
+    "__panelId__": "140",
+    "summary": "Down Service"
+  },
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": "platform-notifications",
+    "mute_time_intervals": [
+      "Monday-Friday-1",
+      "Monday-Friday-2",
+      "Weekend"
+    ]
+  },
+  "record": null
+}

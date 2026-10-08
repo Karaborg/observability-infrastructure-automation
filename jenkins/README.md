@@ -1,5 +1,5 @@
 # Jenkins status
 
-This directory is reserved for CI/CD orchestration. No executable Jenkins pipeline is implemented yet.
+This directory is reserved for a tested CI/CD pipeline. No executable Jenkins pipeline is implemented yet.
 
-The intended pipeline will validate and run the Ansible deployment, then run Terraform plan/apply for central Grafana resources once that configuration exists. Store credentials in Jenkins Credentials or a connected secrets manager, never in a Jenkinsfile.
+The intended workflow validates and runs Ansible, then performs Terraform plan/apply under approved change control. Keep all credentials in Jenkins Credentials or a connected secrets manager.

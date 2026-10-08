@@ -1,0 +1,6 @@
+---
+# Scaffold only: this role has no deployment tasks yet.
+otel_javaagent_path: "/opt/observability/opentelemetry/opentelemetry-javaagent.jar"
+otel_collector_host: "otel-collector.example.com"
+otel_metrics_port: 4317
+otel_traces_port: 4317

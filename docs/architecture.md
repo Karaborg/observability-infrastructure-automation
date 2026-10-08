@@ -1,42 +1,24 @@
 # Architecture
 
-This project separates host configuration from central observability-platform configuration.
+## Responsibility boundaries
 
 | Component | Responsibility | Status |
 | --- | --- | --- |
-| Ansible | Linux directories, Alloy binary/configuration, systemd lifecycle | Implemented |
-| Grafana Alloy | Discover, enrich, truncate, and forward application logs | Implemented |
-| Loki | Central log storage and query backend | External dependency |
-| Grafana | Log exploration, dashboards, alerts | External dependency |
-| Terraform | Grafana resources such as folders, dashboards, and alerts | Planned |
-| Jenkins | Run Ansible and Terraform in CI/CD | Planned |
+| Ansible | Alloy installation, rendered configuration, systemd lifecycle | Implemented |
+| Grafana Alloy | File discovery, log enrichment, truncation, forwarding to Loki | Implemented |
+| Terraform | Grafana resources and configuration | Implemented |
+| Loki, Prometheus, Tempo, Grafana servers | External dependencies | Not managed here |
+| OpenTelemetry Java agent | Generic environment template | Scaffold only |
+| Jenkins | CI/CD orchestration | Planned |
 
-## Host-side flow
+## Log path
 
-```text
-Application files (*.log, *.out)
-  -> local.file_match
-  -> loki.source.file
-  -> loki.process
-  -> loki.write
-  -> Loki
-  -> Grafana
-```
+Alloy discovers configurable `*.log` and `*.out` files and labels streams with environment, hostname, filename, and application job. It starts at the end of existing files and truncates oversized entries before forwarding to Loki.
 
-The configuration adds `environment`, `hostname`, `logfile`, and `job` labels. `job` maps to the configured `application_name`; `logfile` is derived from the source filename. This makes environment-wide and per-file queries possible without embedding internal infrastructure naming in the role.
+Systemd limits CPU, memory, and task creation to isolate the agent from noisy workloads. Alloy runs as the configured non-root service account; only unit installation and lifecycle commands use privilege escalation.
 
-## Design decisions
+## Grafana configuration
 
-**Idempotency.** Ansible uses state-based modules for directories, templates, and systemd. Artifact extraction and binary renaming use `creates` guards. An unchanged deployment should converge without changes.
+The Terraform module provisions folders, Prometheus/Loki/Tempo data sources, dashboards, one generic availability rule, mute timings, and a notification policy. It assumes data sources and a target contact point already exist or are reachable; it does not deploy server components.
 
-**Least privilege.** The systemd unit runs Alloy as `monitoring_owner`. Only unit installation and service lifecycle operations use privilege escalation. The designated user must be granted read access to the application logs by the host’s normal permission model.
-
-**First-rollout safety.** `tail_from_end = true` begins at the end of existing files, preventing a deployment from immediately sending a large historical backlog.
-
-**Large-entry safety.** `stage.truncate` limits each pathological line to 256 KiB by default, preserving a suffix to make truncation visible.
-
-**Host protection.** Systemd supplies `MemoryLimit`, `CPUQuota`, `TasksMax`, and restart-on-failure. `MemoryLimit` was selected for compatibility with older systemd versions where relying only on newer cgroup settings is less portable.
-
-**Ownership boundaries.** Ansible does not configure Grafana resources, and Terraform will not install host agents. This keeps agent rollout independent from dashboards and alerting changes.
-
-For setup instructions, see [usage.md](usage.md).
+The Java-agent template references a configurable OTLP collector but no tasks apply it and no collector configuration is included. Therefore metrics and traces are not represented as an implemented end-to-end path.

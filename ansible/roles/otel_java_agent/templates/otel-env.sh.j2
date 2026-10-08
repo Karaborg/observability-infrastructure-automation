@@ -1,0 +1,22 @@
+#!/bin/bash
+
+OTEL_JAVAAGENT="{{ otel_javaagent_path }}"
+
+OTEL_COLLECTOR_HOST="{{ otel_collector_host }}"
+OTEL_METRICS_PORT="{{ otel_metrics_port }}"
+OTEL_TRACES_PORT="{{ otel_traces_port }}"
+
+OTEL_METRICS_ENDPOINT="http://${OTEL_COLLECTOR_HOST}:${OTEL_METRICS_PORT}"
+OTEL_TRACES_ENDPOINT="http://${OTEL_COLLECTOR_HOST}:${OTEL_TRACES_PORT}"
+
+OTEL_JAVA_OPTS=(
+  "-javaagent:${OTEL_JAVAAGENT}"
+  "-Dotel.metrics.exporter=otlp"
+  "-Dotel.exporter.otlp.metrics.protocol=grpc"
+  "-Dotel.exporter.otlp.metrics.endpoint=${OTEL_METRICS_ENDPOINT}"
+  "-Dotel.instrumentation.runtime-metrics.enabled=true"
+  "-Dotel.logs.exporter=none"
+  "-Dotel.traces.exporter=otlp"
+  "-Dotel.exporter.otlp.protocol=grpc"
+  "-Dotel.exporter.otlp.endpoint=${OTEL_TRACES_ENDPOINT}"
+)
